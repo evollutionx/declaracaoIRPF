@@ -81,11 +81,6 @@ $('#uploadForm').on('submit', async function (e) {
     return;
   }
 
-  if (!/^\\d{11}$/.test(cpf)) {
-    showAlert('warning', 'O CPF deve ter 11 dígitos.');
-    return;
-  }
-
   if (file.type !== 'application/pdf') {
     showAlert('warning', 'O arquivo deve estar em formato PDF.');
     return;
