@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Envio de Declaração de Renda</title>
+  <!-- Bootstrap + jQuery via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="bg-light">
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Envie sua Declaração de Renda (simulação)</h3>
+
+            <form id="uploadForm">
+              <div class="mb-3">
+                <label for="nome" class="form-label">Nome completo</label>
+                <input type="text" class="form-control" id="nome" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="rg" class="form-label">RG</label>
+                <input type="text" class="form-control" id="rg" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="cpf" class="form-label">CPF</label>
+                <input type="text" class="form-control" id="cpf" placeholder="somente números" required>
+                <div class="form-text">O arquivo será salvo como <code>declaracoes/&lt;cpf&gt;.pdf</code>.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="file" class="form-label">Arquivo PDF</label>
+                <input type="file" class="form-control" id="file" accept="application/pdf" required>
+              </div>
+
+              <div id="alertPlaceholder"></div>
+              <button type="submit" class="btn btn-primary">Enviar (simulação)</button>
+            </form>
+          </div>
+        </div>
+
+        <p class="small text-muted mt-3">
+          Esta é uma versão demonstrativa. O arquivo é apenas renomeado localmente e baixado novamente como se tivesse sido enviado.
+        </p>
+      </div>
+    </div>
+  </div>
+
+<script>
+function showAlert(type, message) {
+  const html = `
+    <div class="alert alert-${type} alert-dismissible" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`;
+  $('#alertPlaceholder').html(html);
+}
+
+function somenteNumeros(str) {
+  return str.replace(/\\D/g, '');
+}
+
+$('#uploadForm').on('submit', async function (e) {
+  e.preventDefault();
+  $('#alertPlaceholder').html('');
+
+  const nome = $('#nome').val().trim();
+  const rg = $('#rg').val().trim();
+  const cpf = somenteNumeros($('#cpf').val());
+  const file = $('#file')[0].files[0];
+
+  if (!nome || !rg || !cpf || !file) {
+    showAlert('warning', 'Preencha todos os campos e selecione o arquivo.');
+    return;
+  }
+
+  if (!/^\\d{11}$/.test(cpf)) {
+    showAlert('warning', 'O CPF deve ter 11 dígitos.');
+    return;
+  }
+
+  if (file.type !== 'application/pdf') {
+    showAlert('warning', 'O arquivo deve estar em formato PDF.');
+    return;
+  }
+
+  // Simula “envio”: baixa o arquivo renomeado
+  try {
+    const blob = file.slice(0, file.size, file.type);
+    const renamedFile = new File([blob], `${cpf}.pdf`, { type: 'application/pdf' });
+
+    const url = URL.createObjectURL(renamedFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = renamedFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showAlert('success', `Simulação concluída! O arquivo foi renomeado para <strong>${cpf}.pdf</strong> e baixado.`);
+    $('#uploadForm')[0].reset();
+  } catch (err) {
+    showAlert('danger', 'Erro ao processar o arquivo.');
+    console.error(err);
+  }
+});
+</script>
+
+</body>
+</html>
